@@ -1,5 +1,5 @@
 from typing import Dict, Optional, List
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 class NameValue(BaseModel):
     name: str
@@ -79,6 +79,8 @@ class AppBase(BaseModel):
     parent: Optional[int] = None
     container: Optional[Container] = None
     functions: Optional[List[Function]] = []
+    #data_created_at: Optional[str] = Field(alias="created_at")
+    #data_updated_at: Optional[str] = Field(alias="updated_at")
 
     class Config:
         orm_mode = True
@@ -108,3 +110,8 @@ class AppUpdate(BaseModel):
     ports: Optional[List[Port]] = []
     ingress: Optional[List[Ingress]] = []
     version: Optional[int] = None
+
+
+class AppList(BaseModel):
+    data: Optional[List[App]] = []
+    total: Optional[int] = 0
