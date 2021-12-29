@@ -112,14 +112,15 @@ async def delete_app_depends(id: int,
     return depend
 
 
-@router.get("/apps/{id}/roles", response_model=schemas.RoleList)
-async def query_app_roles(id: int,
+@router.get("/apps/{app_id}/roles", response_model=schemas.RoleList)
+async def query_app_roles(app_id: int,
                           db: Session = Depends(database.client),
                           title: Optional[str] = None,
+                          id: Optional[int] = None,
                           skip: int = 0,
                           limit: int = 100,
                           total: int = None):
-    filter = {'id': id, 'title': title}
+    filter = {'app_id': app_id, 'title': title, 'id': id}
     roles = database.crud.role.query(db, filter=filter, skip=skip, limit=limit)
     if not total:
         total = database.crud.role.count(db, filter=filter)

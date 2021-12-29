@@ -7,7 +7,7 @@ from .base import CRUDBase
 
 class CRUDUser(CRUDBase[User, AccountCreate, AccountUpdate]):
 
-    def authorized(self, db: Session, *, user_id: int, app_id: int = None) -> list:
+    def authorized(self, db: Session, *, user_id: int, app_id: int = None, ignore: bool = False) -> list:
         authorized_exists = db.query(Authorized)\
                               .filter(Authorized.role_id == Role.id,
                                       Authorized.user_id == user_id,
@@ -18,17 +18,22 @@ class CRUDUser(CRUDBase[User, AccountCreate, AccountUpdate]):
                         .join(App, App.id == Role.app_id)\
                         .with_entities(Role.id, Role.title, Role.app_id, App.name.label('app_name'), App.title.label('app_title'))\
                         .filter(authorized_exists.exists())\
-                        .filter(Role.data_enabled == True)\
+                        .filter(Role.data_enabled == True, App.data_enabled == True)\
                         .all()
-
+        query_apps = db.query(App)\
+                       .with_entities(App.id, App.title, App.name)\
+                       .filter(App.parent == None, App.data_enabled == True)
         apps = {}
+        for item in query_apps:
+            if not apps.get(item.id):
+                apps[item.id] = {'id': item.id, 'name': item.name,
+                                 'title': item.title, 'roles': []}
         for item in query_roles:
-            print(item)
-            if not apps.get(item.app_id):
-                apps[item.app_id] = {
-                    'id': item.app_id, 'name': item.app_name, 'title': item.app_title, 'roles': []}
             apps[item.app_id]['roles'].append(item)
-        return list(apps.values())
+
+        if ignore:
+            return list(apps.values())
+        return [item for item in apps.values() if len(item['roles']) > 0]
 
 
 user = CRUDUser(User)

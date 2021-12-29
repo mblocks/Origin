@@ -85,6 +85,7 @@ async def set_user_app_authorized(user_id: int,
 @router.get("/users/{user_id}/authorized/apps", response_model=List[schemas.UserAuthorized])
 async def get_user_apps_authorized(user_id: int,
                                    app_id: int = None,
+                                   ignore: bool = False,
                                    db: Session = Depends(database.client),
                                    ):
-    return database.crud.user.authorized(db, user_id=user_id, app_id=app_id)
+    return database.crud.user.authorized(db, user_id=user_id, app_id=app_id, ignore=ignore)
