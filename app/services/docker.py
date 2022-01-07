@@ -107,10 +107,9 @@ def create_container(app: App, network: str, parent: str = None):
         'host_config': generate_host_config(ports=app.ports, volumes=app.volumes),
         'ports': list(generate_ports(app.ports).keys()),
         'labels': generate_labels(app.ingress, '{}-{}'.format(parent, app.name) if parent else app.name),
-        'networking_config': client.api.create_networking_config({network: client.api.create_endpoint_config(aliases=['{}.{}'.format(app.name, parent) if parent else app.name])}),
+        'networking_config': client.api.create_networking_config({network: client.api.create_endpoint_config(aliases=get_container_aliases(app_name=app.name, parent=app.parent))}),
     }
-    container_name = '{}-{}-{}'.format(namespace, parent +
-                                       '-'+app.name if parent else app.name, app.version)
+    container_name = get_container_name(app_name=app.name, parent=parent, version=app.version)
     container = get_container(name=container_name)
     if container is None:
         client.api.create_container(
@@ -133,8 +132,7 @@ def update_app(app: App, parent: str):
     exists_host_ports = len(
         [item.get('host_port') != None for item in app.ports])
     # remove container first then create new one if used host ports
-    container_name = '{}-{}-{}'.format(namespace, parent,
-                                       app.name) if parent else '{}-{}'.format(namespace, app.name)
+    container_name = get_container_name(app_name=app.name, parent=parent)
     if exists_host_ports:
         remove_container(filters={'name': container_name})
         create_container(App(**fix, depends=[]),
@@ -169,6 +167,24 @@ def deploy_app(app):
 
 
 def remove_app(app: App, parent: str):
-    container_name = '{}-{}-{}'.format(namespace, parent,
-                                       app.name) if parent else '{}-{}'.format(namespace, app.name)
+    container_name = get_container_name(app_name=app.name, parent=parent)
     remove_container(filters={'name': container_name})
+
+
+def rename_container(container_id: str, name: str):
+    container = get_container(name=container_id)
+    if container:
+        container.rename(name)
+
+
+def get_container_name(*, app_name, parent = None, version = None):
+    container_name = '{}-{}-{}'.format(namespace, parent,
+                                       app_name) if parent else '{}-{}'.format(namespace, app_name)
+    if version:
+        return '{}-{}'.format(container_name, version)
+    return container_name
+
+def get_container_aliases(*, app_name, parent = None):
+    if parent:
+        return ['{}.{}.{}'.format(app_name, parent, namespace)]
+    return ['{}.{}'.format(app_name, namespace)]
