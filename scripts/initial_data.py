@@ -1,19 +1,26 @@
 import logging
+import socket
 from app import schemas
 from app.services import docker
+from app.config import get_settings
 from app.services.database.session import SessionLocal
 from app.services.database import crud, models
 
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
+settings = get_settings()
 
 def init() -> None:
     db = SessionLocal()
-    if crud.account.count(db, filter={}) > 0:
-        return
-    create_origin_app(db)
+    if crud.account.count(db, filter={}) == 0:
+        crud.account.create(db, payload=schemas.AccountCreate.parse_obj({
+            'user_name': settings.ROOT_NAME,
+            'display_name': settings.ROOT_NAME,
+            'password': settings.ROOT_PASSWORD,
+        }))
+    if crud.app.count(db, filter={}) == 0:
+        create_origin_app(db)
 
 
 def create_origin_app(db) -> None:
@@ -92,7 +99,13 @@ def create_origin_app(db) -> None:
             ]
         })
     )
+    rename_container(docker.get_container_name(app_name=created_app.name,version=created_app.version))
     docker.deploy_app(created_app)
+
+def rename_container(name):
+    hostname = socket.gethostname()
+    docker.rename_container(hostname, name)
+
 
 def main() -> None:
     logger.info("Creating initial data")
