@@ -51,6 +51,9 @@ async def join(response: Response,
 
 
 @router.get("/", response_model=schemas.AboutUs)
-async def index(db: Session = Depends(database.client),
-                currentUser: schemas.CurrentUser = Depends(get_user)):
-    return {'currentUser': currentUser}
+async def index():
+    return {
+        'logo': 'https://gw.alipayobjects.com/zos/rmsportal/KDpgvguMpGfqaHPjicRK.svg',
+        'title': 'Mblocks',
+        'description': 'Hello Mblocks',
+    }
