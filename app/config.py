@@ -31,6 +31,9 @@ class Settings(BaseSettings):
     CONTAINER_NAME_PREFIX: str = 'mblocks'
     CONTAINER_NETWORK: str = 'mblocks'
     Environment: List[str] = ['FASTAPI_CONFIG','SQLALCHEMY_DATABASE_URI']
+
+    ROOT_NAME: str = 'admin'
+    ROOT_PASSWORD: str = 'mblocks'
     class Config:
         case_sensitive: bool = True
         env_file: bool = ".env"
