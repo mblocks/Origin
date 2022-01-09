@@ -1,5 +1,6 @@
 from typing import Dict, Optional, List
 from pydantic import BaseModel, Field
+from .role import RoleCreate
 
 class NameValue(BaseModel):
     name: str
@@ -91,7 +92,7 @@ class App(AppBase):
 
 
 class AppCreate(App):
-    pass
+    roles: Optional[List[RoleCreate]] = []
 
 
 class AppUpdate(BaseModel):
