@@ -26,6 +26,14 @@ def test_app_create(db):
                     'target': {'path': '/', 'port': 80},
                 }
             ],
+             "auth": {
+                         "query": {
+                                     "title": "arole",
+                                    "conditions": [
+                                        {"name": "user_id", "value": 10}
+                                    ]
+                                }
+            },
             'depends': [
                 {
                     'name': 'redis',
