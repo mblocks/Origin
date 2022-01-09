@@ -171,10 +171,12 @@ def remove_app(app: App, parent: str):
     remove_container(filters={'name': container_name})
 
 
-def rename_container(container_id: str, name: str):
+def rename_container(container_id: str, name: str) -> bool:
     container = get_container(name=container_id)
     if container:
         container.rename(name)
+        return True
+    return False
 
 
 def get_container_name(*, app_name, parent = None, version = None):
