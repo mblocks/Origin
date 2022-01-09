@@ -37,6 +37,13 @@ def generate_apikey(current_user: schemas.CurrentUser) -> str:
     pipe.reset()
     return apikey
 
+def get_user(apikey):
+    id = int(client.zscore(key_sessions, apikey))
+    if not id:
+        return None
+    user = client.get(key_users.format(id))
+    return json.loads(user) if user else None
+
 
 def set_authorized(user):
     client.set(key_users_authorized.format(user.get('id')), json.dumps(
