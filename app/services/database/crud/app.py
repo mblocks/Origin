@@ -13,8 +13,10 @@ class CRUDApp(CRUDBase[App, AppCreate, AppUpdate]):
                payload: AppCreate
                ) -> App:
         depends = payload.depends
+        roles = payload.roles
         del payload.container
         del payload.depends
+        del payload.roles
         created_app = super().create(db, payload=payload, refresh=False, commit=False)
         created_app.depends = []
         for depend in depends:
@@ -22,6 +24,8 @@ class CRUDApp(CRUDBase[App, AppCreate, AppUpdate]):
             depend.parent = created_app.id
             created_depend = super().create(db, payload=depend, refresh=False, commit=False)
             created_app.depends.append(created_depend)
+        for role in roles:
+            super().create(db, payload=role, refresh=False, commit=False)
         db.commit()
         return created_app
 
