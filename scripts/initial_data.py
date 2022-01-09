@@ -96,6 +96,9 @@ def create_origin_app(db) -> None:
                         "--entrypoints.web.address=:80"
                     ]
                 }
+            ],
+            'roles': [
+                { 'title':'admin', 'auth': {} }
             ]
         })
     )
