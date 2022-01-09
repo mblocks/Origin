@@ -2,13 +2,13 @@
 
 
 def test_get_index(client):
-    response = client.get("/")
+    response = client.get("/welcome")
     assert response.status_code == 200
 
 
 def test_post_join(client):
     response = client.post(
-        "/join",
+        "/welcome/join",
         json={"user_name": "test", "password": "test", "display_name": "asdf"}
     )
     assert response.status_code == 200
@@ -16,12 +16,12 @@ def test_post_join(client):
 
 def test_post_login(client):
     client.post(
-        "/join",
+        "/welcome/join",
         json={"user_name": "test_login",
               "password": "test111111", "display_name": "asdf"}
     )
     response = client.post(
-        "/login",
+        "/welcome/login",
         json={"user_name": "test_login", "password": "test111111"}
     )
     assert response.status_code == 200
@@ -83,7 +83,14 @@ def test_post_admin_app_roles(client):
     response = client.post(url,
                            json={
                                "title": "string",
-                               "auth": {"query": "hello"},
+                               "auth": {
+                                        "query": {
+                                            "title": "arole",
+                                            "conditions": [
+                                                {"name": "user_id", "value": 10}
+                                            ]
+                                        }
+                               },
                                "description": "string",
                                "enabled": True,
                            }
@@ -102,7 +109,15 @@ def test_post_admin_app_role_update(client):
     created_role = client.post(url,
                                json={
                                    "title": "string",
-                                   "auth": {"query": "hello"},
+                                   "auth": {
+                                       "query": {
+                                           "title": "arole",
+                                                    "conditions": [
+                                                        {"name": "user_id",
+                                                            "value": 10}
+                                                    ]
+                                       }
+                                   },
                                    "description": "string",
                                    "enabled": True,
                                }
@@ -110,7 +125,14 @@ def test_post_admin_app_role_update(client):
     response = client.post(url + "/{}".format(created_role.get("id")),
                            json={
                                "title": "role_title_updated",
-                               "auth": {"query": "helloworld"},
+                               "auth": {
+                                        "query": {
+                                            "title": "updated_arole",
+                                            "conditions": [
+                                                {"name": "user_id", "value": 10}
+                                            ]
+                                        }
+                               },
                                "description": "string",
                                "enabled": True,
     }
@@ -129,7 +151,15 @@ def test_post_admin_app_role_delete(client):
     created_role = client.post(url,
                                json={
                                    "title": "string",
-                                   "auth": {"query": "hello"},
+                                   "auth": {
+                                       "query": {
+                                           "title": "delete_arole",
+                                                    "conditions": [
+                                                        {"name": "user_id",
+                                                            "value": 10}
+                                                    ]
+                                       }
+                                   },
                                    "description": "string",
                                    "enabled": True,
                                }
@@ -211,7 +241,14 @@ def test_post_admin_user_authorized(client):
         url,
         json={
             "title": "string",
-            "auth": {"query": "hello"},
+            "auth": {
+                "query": {
+                    "title": "updated_arole",
+                    "conditions": [
+                        {"name": "user_id", "value": 10}
+                    ]
+                }
+            },
             "description": "string",
             "enabled": True,
         }
@@ -221,4 +258,5 @@ def test_post_admin_user_authorized(client):
         json=[created_role.get("id")])
     authorized = response.json()
     assert response.status_code == 200
-    assert created_role.get("id") in ([item.get('id') for item in authorized[0].get('roles')])
+    assert created_role.get("id") in (
+        [item.get('id') for item in authorized[0].get('roles')])
