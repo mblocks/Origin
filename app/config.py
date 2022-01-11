@@ -23,7 +23,7 @@ class Settings(BaseSettings):
     OPENAPI_PREFIX: str = ""
     SQLALCHEMY_DATABASE_URI: str = prefix + os.path.join(basedir, 'data.db')
     SQLALCHEMY_ECHO: bool = FASTAPI_CONFIG!='production'
-    REDIS_HOST: str = '127.0.0.1'
+    REDIS_HOST: str = 'redis.origin.mblocks'
     REDIS_PORT: int = 6379
     REDIS_DB: int = 0
     REDIS_PASSWORD: str = None
