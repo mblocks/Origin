@@ -40,6 +40,7 @@ class Ingress(BaseModel):
     path:  Optional[str] = None
     target: Optional[IngressTarget] = None
     middlewares: Optional[List[Middleware]] = []
+    use_auth: Optional[bool] = False
 
 
 class FunctionArg(BaseModel):

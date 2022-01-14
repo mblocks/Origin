@@ -35,6 +35,12 @@ def create_origin_app(db) -> None:
                     'path': '/api/welcome',
                     'target': {'path': '/welcome', 'port': 80},
                 },
+                {
+                    'name': 'default',
+                    'path': '/',
+                    'use_auth': True,
+                    'target': {'path': '/', 'port': 80},
+                },
             ],
             'depends': [
                 {
@@ -47,11 +53,6 @@ def create_origin_app(db) -> None:
                     'title': 'gateway',
                     'image': 'mblocks/gateway:0.0.18',
                     'ingress': [
-                        {
-                            'name': 'portal',
-                            'path': '/',
-                            'target': {'path': '/', 'port': 80},
-                        },
                         {
                             'name': 'api',
                             'path': '/api',
