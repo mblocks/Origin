@@ -2,6 +2,7 @@ import docker
 from typing import Dict, List
 from docker.types import Mount
 from app.schemas.app import Environment, Port, Volume, Ingress, App
+from app import backgrounds
 
 #client = docker.DockerClient(base_url='unix://var/run/docker.sock')
 client = docker.from_env()
@@ -142,7 +143,7 @@ def update_app(app: App, parent: str):
                                              network=namespace, parent=parent)
         remove_container(
             filters={'name': container_name, 'before': created_container.id})
-
+    backgrounds.init_kong()
 
 def get_image(name):
     try:
@@ -164,11 +165,12 @@ def deploy_app(app):
     for depend in app.depends:
         get_image(depend.image)
     create_container(App(**fix, depends=app.depends), network=namespace)
-
+    backgrounds.init_kong()
 
 def remove_app(app: App, parent: str):
     container_name = get_container_name(app_name=app.name, parent=parent)
     remove_container(filters={'name': container_name})
+    backgrounds.init_kong()
 
 
 def rename_container(container_id: str, name: str) -> bool:
