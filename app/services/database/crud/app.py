@@ -2,7 +2,7 @@
 from typing import List, Optional
 from app.schemas import AppCreate, AppUpdate
 from sqlalchemy.orm import Session
-from ..models import App
+from ..models import App, Role
 from .base import CRUDBase
 
 
@@ -25,7 +25,8 @@ class CRUDApp(CRUDBase[App, AppCreate, AppUpdate]):
             created_depend = super().create(db, payload=depend, refresh=False, commit=False)
             created_app.depends.append(created_depend)
         for role in roles:
-            super().create(db, payload=role, refresh=False, commit=False)
+            role.app_id = created_app.id
+            db.add(Role(**role.dict()))
         db.commit()
         return created_app
 
