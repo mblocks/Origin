@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from fastapi import Request, HTTPException
+from fastapi import Request
 from app import services, schemas
 
 
@@ -22,4 +22,4 @@ def get_current_user(request: Request):
                                    third_user_id=user.get('third_user_id'),
                                    third_user_name=user.get('third_user_name')
                                    )
-    raise HTTPException(status_code=401, detail="apikey is invalid")
+    return None
