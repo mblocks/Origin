@@ -20,5 +20,5 @@ class AboutUs(BaseModel):
     logo: Optional[str] = None
     title: Optional[str] = None
     description: Optional[str] = None
-    currentUser: Optional[User] = None
+    userinfo: Optional[User] = None
     apps: Optional[List[App]] = []
