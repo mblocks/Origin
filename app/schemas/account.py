@@ -13,7 +13,9 @@ class AccountCreate(AccountLogin):
 
 
 class AccountUpdate(BaseModel):
-    pass
+    display_name: Optional[str] = None
+    email: Optional[str] = None
+    password: Optional[str] = None
 
 
 class AccountChangePassword(BaseModel):
@@ -21,3 +23,7 @@ class AccountChangePassword(BaseModel):
     new_password: str
 
 
+class AccountInfo(BaseModel):
+    user_name: Optional[str] = None
+    display_name: Optional[str] = None
+    email: Optional[str] = None

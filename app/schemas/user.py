@@ -18,11 +18,11 @@ class UserList(BaseModel):
 
 
 class UserCreate(User):
-    pass
+    password: str = None
 
 
 class UserUpdate(User):
-    pass
+    password: Optional[str] = None
 
 
 class CurrentUser(BaseModel):
