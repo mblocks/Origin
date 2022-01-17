@@ -1,4 +1,4 @@
-from .account import AccountCreate, AccountUpdate, AccountLogin, AccountChangePassword
+from .account import AccountCreate, AccountUpdate, AccountLogin, AccountChangePassword, AccountInfo
 from .user import User, UserList, CurrentUser, UserCreate, UserUpdate, UserAuthorized
 from .app import AppCreate, AppUpdate, App, AppList
 from .welcome import AboutUs
