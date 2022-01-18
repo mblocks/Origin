@@ -28,7 +28,7 @@ def create_origin_app(db) -> None:
         {
             'name': 'origin',
             'description': '',
-            'image': 'nginx:alpine',
+            'image': 'mblocks/origin',
             'ingress': [
                 {
                     'name': 'welcome',
