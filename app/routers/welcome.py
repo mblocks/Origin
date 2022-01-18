@@ -2,7 +2,7 @@
 from fastapi import APIRouter, Depends, Response, HTTPException
 from sqlalchemy.orm import Session
 from app import schemas
-from app.services import database, get_user
+from app.services import database
 from app.utils import verify_password, generate_apikey
 router = APIRouter()
 
@@ -30,7 +30,7 @@ async def login(response: Response,
             },
         ])
     response.set_cookie(key="apikey", value=generate_apikey(find_user))
-    return {'currentUser': find_user}
+    return {'userinfo': find_user}
 
 
 @router.post("/join", response_model=schemas.AboutUs)
@@ -47,13 +47,4 @@ async def join(response: Response,
         ])
     account = database.crud.account.create(db=db, payload=payload)
     response.set_cookie(key="apikey", value=generate_apikey(account))
-    return {'currentUser': account}
-
-
-@router.get("/", response_model=schemas.AboutUs)
-async def index():
-    return {
-        'logo': 'https://gw.alipayobjects.com/zos/rmsportal/KDpgvguMpGfqaHPjicRK.svg',
-        'title': 'Mblocks',
-        'description': 'Hello Mblocks',
-    }
+    return {'userinfo': account}
