@@ -177,6 +177,7 @@ def test_post_admin_users(client):
     response = client.post("/admin/users",
                            json={
                                "user_name": "created_user",
+                               "password": "test",
                                "display_name": "string",
                                "email": "string"
                            })
@@ -189,6 +190,7 @@ def test_get_admin_user(client):
     creaded_user = client.post("/admin/users",
                                json={
                                    "user_name": "created_user2",
+                                   "password": "test",
                                    "display_name": "string",
                                    "email": "string"
                                }).json()
@@ -202,6 +204,7 @@ def test_post_admin_user(client):
     creaded_user = client.post("/admin/users",
                                json={
                                    "user_name": "created_user3",
+                                   "password": "test",
                                    "display_name": "string",
                                    "email": "string"
                                }).json()
@@ -219,6 +222,7 @@ def test_post_admin_user_delete(client):
     creaded_user = client.post("/admin/users",
                                json={
                                    "user_name": "created_user4",
+                                   "password": "test",
                                    "display_name": "string",
                                    "email": "string"
                                }).json()
