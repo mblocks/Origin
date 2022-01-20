@@ -3,8 +3,6 @@ import os
 import sys
 from functools import lru_cache
 from typing import List
-
-from sqlalchemy.sql.expression import true
 from pydantic import BaseSettings
 
 basedir = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
