@@ -108,7 +108,7 @@ def create_container(app: App, network: str, parent: str = None):
         'host_config': generate_host_config(ports=app.ports, volumes=app.volumes),
         'ports': list(generate_ports(app.ports).keys()),
         'labels': generate_labels(app.ingress, '{}-{}'.format(parent, app.name) if parent else app.name),
-        'networking_config': client.api.create_networking_config({network: client.api.create_endpoint_config(aliases=get_container_aliases(app_name=app.name, parent=app.parent))}),
+        'networking_config': client.api.create_networking_config({network: client.api.create_endpoint_config(aliases=get_container_aliases(app_name=app.name, parent=parent))}),
     }
     container_name = get_container_name(app_name=app.name, parent=parent, version=app.version)
     container = get_container(name=container_name)
@@ -192,3 +192,6 @@ def get_container_aliases(*, app_name, parent = None):
     if parent:
         return ['{}.{}.{}'.format(app_name, parent, namespace)]
     return ['{}.{}'.format(app_name, namespace)]
+
+def connect_network(container_id: str) -> None:
+    client.api.connect_container_to_network(container_id, namespace)

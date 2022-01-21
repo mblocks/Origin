@@ -4,7 +4,7 @@ from app import schemas
 from app.services import docker
 from app.config import get_settings
 from app.services.database.session import SessionLocal
-from app.services.database import crud, models
+from app.services.database import crud
 
 
 logging.basicConfig(level=logging.INFO)
@@ -35,12 +35,6 @@ def create_origin_app(db) -> None:
                     'path': '/api/welcome',
                     'target': {'path': '/welcome', 'port': 80},
                 },
-                {
-                    'name': 'default',
-                    'path': '/',
-                    'use_auth': True,
-                    'target': {'path': '/', 'port': 80},
-                },
             ],
             'depends': [
                 {
@@ -57,6 +51,12 @@ def create_origin_app(db) -> None:
                             'name': 'api',
                             'path': '/api',
                             'target': {'path': '/', 'port': 8000}
+                        },
+                        {
+                            'name': 'default',
+                            'path': '/',
+                            'use_auth': True,
+                            'target': {'path': '/', 'port': 80},
                         },
                     ],
                     'environment': [
@@ -109,6 +109,7 @@ def create_origin_app(db) -> None:
 def rename_container(name):
     hostname = socket.gethostname()
     docker.rename_container(hostname, name)
+    docker.connect_network(name)
 
 
 def main() -> None:

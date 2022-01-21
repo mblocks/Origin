@@ -49,4 +49,4 @@ def init_kong() -> None:
         ]
     }
     print('=== kong config {} services==='.format(len(kong_services)))
-    requests.post(('http://192.168.50.54:8001/config'), json=config)
+    requests.post(('http://gateway.origin.mblocks:8001/config'), json=config)
