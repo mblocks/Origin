@@ -45,7 +45,7 @@ def create_origin_app(db) -> None:
                 {
                     'name': 'gateway',
                     'title': 'gateway',
-                    'image': 'mblocks/gateway:0.0.18',
+                    'image': 'mblocks/gateway',
                     'ingress': [
                         {
                             'name': 'api',
