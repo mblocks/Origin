@@ -1,4 +1,5 @@
 import docker
+import uuid
 from typing import Dict, List
 from docker.types import Mount
 from app.schemas.app import Environment, Port, Volume, Ingress, App
@@ -47,6 +48,8 @@ def generate_host_config(*, ports: Dict[str, str], volumes: Dict[str, str]):
 def generate_labels(ingress: List[Ingress], prefix: str):
     result = {}
     for item in ingress:
+        if item.use_auth != None:
+            continue
         result['traefik.enable'] = "true"
         rule = []
         name = '{}-{}'.format(prefix, item.name)
@@ -60,25 +63,27 @@ def generate_labels(ingress: List[Ingress], prefix: str):
         result['traefik.http.services.{}.loadbalancer.server.port'.format(
             name)] = '{}'.format(item.target.port)
         result['traefik.http.middlewares.{}.stripprefix.prefixes'.format(
-            name)] = item.path
+            name)] = item.stripprefix
         result['traefik.http.routers.{}.middlewares'.format(
             name)] = '{}@docker'.format(name)
     return result
 
 
-def get_container(*, name=None, image=None):
+def get_container(*, name=None, image=None, label=None):
     if name:
         try:
             return client.containers.get(name)
         except docker.errors.NotFound:
             return None
+    elif label:
+        find_containers = client.containers.list(
+            filters={'label': label})
     elif image:
         find_containers = client.containers.list(
             filters={'ancestor': image, 'status': 'running'})
-        if len(find_containers) == 0:
-            return None
-        return find_containers[0]
-    return None
+    if len(find_containers) == 0:
+        return None
+    return find_containers[0]
 
 
 def query_container(*, name: str = ''):
@@ -111,12 +116,16 @@ def create_container(app: App, network: str, parent: str = None):
         'networking_config': client.api.create_networking_config({network: client.api.create_endpoint_config(aliases=get_container_aliases(app_name=app.name, parent=parent))}),
     }
     container_name = get_container_name(app_name=app.name, parent=parent, version=app.version)
-    container = get_container(name=container_name)
+    container_label = '{}.app={}'.format(namespace,get_container_label(app_name=app.name, parent=parent))
+    settings['labels'].update({'{}.app'.format(namespace):get_container_label(app_name=app.name, parent=parent)})
+    container = get_container(label=container_label)
     if container is None:
-        client.api.create_container(
+        container_id = client.api.create_container(
             app.image, name=container_name, detach=True, **settings)
-    client.api.start(container_name)
-    return get_container(name=container_name)
+    else:
+        container_id = container.id
+    client.api.start(container_id)
+    return get_container(label=container_label)
 
 
 def remove_container(filters):
@@ -133,16 +142,17 @@ def update_app(app: App, parent: str):
     exists_host_ports = len(
         [item.get('host_port') != None for item in app.ports])
     # remove container first then create new one if used host ports
-    container_name = get_container_name(app_name=app.name, parent=parent)
-    if exists_host_ports:
-        remove_container(filters={'name': container_name})
-        create_container(App(**fix, depends=[]),
-                         network=namespace, parent=parent)
-    else:
-        created_container = create_container(App(**fix, depends=[]),
-                                             network=namespace, parent=parent)
-        remove_container(
-            filters={'name': container_name, 'before': created_container.id})
+    container_label = '{}.app={}'.format(namespace,get_container_label(app_name=app.name, parent=parent))
+    container = get_container(label=container_label)
+    if container:
+        if exists_host_ports:
+            container.remove(force=True)
+            create_container(App(**fix, depends=[]),
+                            network=namespace, parent=parent)
+        else:
+            create_container(App(**fix, depends=[]),
+                            network=namespace, parent=parent)
+            container.remove(force=True)
     backgrounds.init_kong()
 
 def get_image(name):
@@ -182,16 +192,17 @@ def rename_container(container_id: str, name: str) -> bool:
 
 
 def get_container_name(*, app_name, parent = None, version = None):
-    container_name = '{}-{}-{}'.format(namespace, parent,
-                                       app_name) if parent else '{}-{}'.format(namespace, app_name)
+    rand_str = uuid.uuid4().hex[0:8]
+    container_name = '{}-{}-{}'.format(namespace, parent if parent else app_name, app_name)
     if version:
-        return '{}-{}'.format(container_name, version)
-    return container_name
+        return '{}-{}-{}'.format(container_name, version, rand_str)
+    return '{}-{}'.format(container_name, rand_str)
 
 def get_container_aliases(*, app_name, parent = None):
     if parent:
         return ['{}.{}.{}'.format(app_name, parent, namespace)]
     return ['{}.{}'.format(app_name, namespace)]
 
-def connect_network(container_id: str) -> None:
-    client.api.connect_container_to_network(container_id, namespace)
+def get_container_label(*, app_name, parent = None):
+    alias = get_container_aliases(app_name=app_name, parent=parent)
+    return alias[0]

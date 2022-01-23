@@ -33,7 +33,21 @@ def create_origin_app(db) -> None:
                 {
                     'name': 'welcome',
                     'path': '/api/welcome',
+                    'stripprefix': '/api',
                     'target': {'path': '/welcome', 'port': 80},
+                },
+                {
+                    'name': 'default',
+                    'path': '/',
+                    'use_auth': {},
+                    'target': {'path': '/', 'port': 80},
+                },
+            ],
+            'volumes': [
+                {
+                    'name': 'docker',
+                    'mount_path': '/var/run/docker.sock',
+                    'host_path': '/var/run/docker.sock',
                 },
             ],
             'depends': [
@@ -50,12 +64,12 @@ def create_origin_app(db) -> None:
                         {
                             'name': 'api',
                             'path': '/api',
+                            'stripprefix': '/api',
                             'target': {'path': '/', 'port': 8000}
                         },
                         {
                             'name': 'default',
                             'path': '/',
-                            'use_auth': True,
                             'target': {'path': '/', 'port': 80},
                         },
                     ],
@@ -103,13 +117,11 @@ def create_origin_app(db) -> None:
             ]
         })
     )
-    rename_container(docker.get_container_name(app_name=created_app.name,version=created_app.version))
     docker.deploy_app(created_app)
 
 def rename_container(name):
     hostname = socket.gethostname()
     docker.rename_container(hostname, name)
-    docker.connect_network(name)
 
 
 def main() -> None:

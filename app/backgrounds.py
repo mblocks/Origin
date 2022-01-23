@@ -10,7 +10,7 @@ def init_kong() -> None:
     apps = database.crud.app.query(db, filter={'parent': 'None'}, skip=0, limit=1000)
     for item in apps:
         for item_router_index, item_router in  enumerate(item.ingress):
-            if item_router.get('use_auth') == True:
+            if item_router.get('use_auth') != None:
                 kong_services.append({'name':'{}-{}'.format(item.name, item_router_index),
                                     'url':'http://{}.mblocks:{}{}'.format(item.name,item_router['target']['port'],item_router['target']['path']),
                                     'routes':[
@@ -20,7 +20,7 @@ def init_kong() -> None:
             
         for item_depend in item.depends:
             for item_depend_router_index, item_depend_router in  enumerate(item_depend.ingress):
-                if item_depend_router.get('use_auth') == True:
+                if item_depend_router.get('use_auth') != None:
                     kong_services.append({'name':'{}-{}-{}'.format(item.name, item_depend.name, item_depend_router_index),
                                         'url':'http://{}.{}.mblocks:{}{}'.format(item_depend.name, item.name ,item_depend_router['target']['port'],item_depend_router['target']['path']),
                                         'routes':[

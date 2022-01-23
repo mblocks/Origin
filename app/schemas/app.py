@@ -38,9 +38,10 @@ class Ingress(BaseModel):
     name: Optional[str] = None
     domain: Optional[str] = None
     path:  Optional[str] = None
+    stripprefix: Optional[str] = '/'
     target: Optional[IngressTarget] = None
     middlewares: Optional[List[Middleware]] = []
-    use_auth: Optional[bool] = False
+    use_auth: Optional[Dict[str, str]] = None
 
 
 class FunctionArg(BaseModel):
