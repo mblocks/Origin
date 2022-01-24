@@ -38,10 +38,10 @@ def generate_apikey(current_user: schemas.CurrentUser) -> str:
     return apikey
 
 def get_user(apikey):
-    id = int(client.zscore(key_sessions, apikey))
+    id = client.zscore(key_sessions, apikey)
     if not id:
         return None
-    user = client.get(key_users.format(id))
+    user = client.get(key_users.format(int(id)))
     return json.loads(user) if user else None
 
 

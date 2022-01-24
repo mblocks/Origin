@@ -17,9 +17,10 @@ def get_current_user(request: Request):
     # direct request from client for debug test
     if request.cookies.get('apikey'):
         user = services.redis.get_user(request.cookies.get('apikey'))
-        return schemas.CurrentUser(id=user.get('id'),
-                                   third=user.get('third'),
-                                   third_user_id=user.get('third_user_id'),
-                                   third_user_name=user.get('third_user_name')
-                                   )
+        if user:
+            return schemas.CurrentUser(id=user.get('id'),
+                                    third=user.get('third'),
+                                    third_user_id=user.get('third_user_id'),
+                                    third_user_name=user.get('third_user_name')
+                                    )
     return None
