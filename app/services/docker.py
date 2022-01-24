@@ -63,7 +63,7 @@ def generate_labels(ingress: List[Ingress], prefix: str):
         result['traefik.http.services.{}.loadbalancer.server.port'.format(
             name)] = '{}'.format(item.target.port)
         result['traefik.http.middlewares.{}.stripprefix.prefixes'.format(
-            name)] = item.stripprefix
+            name)] = item.stripprefix if item.stripprefix else item.path
         result['traefik.http.routers.{}.middlewares'.format(
             name)] = '{}@docker'.format(name)
     return result

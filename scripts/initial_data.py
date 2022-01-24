@@ -64,7 +64,6 @@ def create_origin_app(db) -> None:
                         {
                             'name': 'api',
                             'path': '/api',
-                            'stripprefix': '/api',
                             'target': {'path': '/', 'port': 8000}
                         },
                         {
