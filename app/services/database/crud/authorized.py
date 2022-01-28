@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-from sqlalchemy.sql.expression import delete
 from app.schemas import AuthorizedCreate, AuthorizedUpdate
 from sqlalchemy.orm import Session
 from ..models import Authorized
