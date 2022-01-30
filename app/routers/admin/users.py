@@ -3,7 +3,7 @@ from typing import Optional, List
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from app import schemas
-from app.services import database, redis
+from app.services import database
 from app.deps import get_current_user
 
 router = APIRouter()
@@ -79,8 +79,7 @@ async def set_user_app_authorized(user_id: int,
                                   db: Session = Depends(database.client),
                                   ):
     create_authorized = schemas.AuthorizedCreate(user_id=user_id, app_id=app_id, roles=payload)
-    updated_authorized = database.crud.authorized.update(db, payload=create_authorized)
-    redis.set_authorized(**updated_authorized)
+    database.crud.authorized.update(db, payload=create_authorized)
     return database.crud.user.authorized(db, user_id=user_id, app_id=app_id)
 
 

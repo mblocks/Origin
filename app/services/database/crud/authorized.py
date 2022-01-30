@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
-from app.schemas import AuthorizedCreate, AuthorizedUpdate
 from sqlalchemy.orm import Session
+from app.schemas import AuthorizedCreate, AuthorizedUpdate
+from app.services import redis
 from ..models import Authorized
 from .base import CRUDBase
 
@@ -27,7 +28,9 @@ class CRUDAuthorized(CRUDBase[Authorized, AuthorizedCreate, AuthorizedUpdate]):
                        app_id=payload.app_id, role_id=role_id))
         db.commit()
         updated_authorized = super().query(db, filter={'app_id': payload.app_id, 'user_id': payload.user_id})
-        return {'app_id': payload.app_id, 'user_id': payload.user_id, 'roles':[item.role_id for item in updated_authorized]}
+        roles = [item.role_id for item in updated_authorized]
+        redis.set_authorized(app_id=payload.app_id, user_id=payload.user_id, roles=roles)
+        return {'app_id': payload.app_id, 'user_id': payload.user_id, 'roles':roles}
 
     
 authorized = CRUDAuthorized(Authorized)

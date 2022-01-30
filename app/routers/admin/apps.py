@@ -3,7 +3,7 @@ from typing import Optional
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from app import schemas
-from app.services import docker, database, redis
+from app.services import docker, database
 router = APIRouter()
 
 
@@ -133,8 +133,6 @@ async def create_app_role(payload: schemas.RoleCreate,
                           db: Session = Depends(database.client)):
     payload.app_id = app_id
     created_role = database.crud.role.create(db, payload=payload)
-    app = database.crud.app.get(db,filter={'id':app_id})
-    redis.set_role(app, created_role)
     return created_role
 
 
@@ -143,11 +141,9 @@ async def update_app_role(payload: schemas.RoleUpdate,
                           app_id: int,
                           role_id: int,
                           db: Session = Depends(database.client)):
-    created_role = database.crud.role.update(
+    updated_role = database.crud.role.update(
         db, filter={'app_id': app_id, 'id': role_id}, payload=payload)
-    app = database.crud.app.get(db,filter={'id':app_id})
-    redis.set_role(app, created_role)
-    return created_role
+    return updated_role
 
 
 @router.post("/apps/{app_id}/roles/{role_id}/delete", response_model=schemas.Role)
@@ -158,5 +154,4 @@ async def delete_app_roles(app_id: int,
     deleted_role = database.crud.role.get(
         db, filter={'app_id': app_id, 'id': role_id})
     database.crud.role.delete(db, filter={'app_id': app_id, 'id': role_id})
-    redis.del_role(role_id)
     return deleted_role

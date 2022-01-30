@@ -192,7 +192,7 @@ def test_role_create(db):
     role = crud.role.create(db, payload=schemas.RoleCreate.parse_obj({
         'title': 'test_role_create',
         'auth': {"query":{}},
-        'parent_id': 1,
+        'app_id': 1,
     }))
 
     find_role = crud.role.get(db=db, filter={'id': role.id})
@@ -203,6 +203,7 @@ def test_role_update(db):
     role = crud.role.create(db, payload={
         'title': 'test_role_update',
         'auth': {"query": {"hello": 1000}},
+        'app_id': 1,
     })
 
     updated_role = crud.role.update(db=db,
