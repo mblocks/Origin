@@ -19,6 +19,8 @@ def init() -> None:
             'display_name': settings.ROOT_NAME,
             'password': settings.ROOT_PASSWORD,
         }))
+        create_authorized = schemas.AuthorizedCreate(user_id=1, app_id=1, roles=[1])
+        crud.authorized.add(db, payload=create_authorized)
     if crud.app.count(db, filter={}) == 0:
         create_origin_app(db)
 

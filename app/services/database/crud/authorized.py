@@ -7,11 +7,13 @@ from .base import CRUDBase
 
 
 class CRUDAuthorized(CRUDBase[Authorized, AuthorizedCreate, AuthorizedUpdate]):
-    def create(self,
+    def add(self,
                db: Session,
                payload: AuthorizedCreate
-               ) -> AuthorizedCreate:
-        return self.update(db, payload)
+               ) -> None:
+        for role_id in payload.roles:
+            db.add(Authorized(user_id=payload.user_id, app_id=payload.app_id, role_id=role_id))
+        db.commit()
 
     def update(self, db: Session, payload: AuthorizedUpdate) -> None:
         query_authorized = super().query(

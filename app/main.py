@@ -22,3 +22,4 @@ app.include_router(routers.admin_users, tags=["admin-users"], prefix="/admin", d
 @app.on_event("startup")
 async def startup_event():
     backgrounds.init_kong()
+    backgrounds.init_redis_data()
