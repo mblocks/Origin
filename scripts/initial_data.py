@@ -26,7 +26,7 @@ def init() -> None:
 def create_origin_app(db) -> None:
     created_app = crud.app.create(db, payload=schemas.AppCreate.parse_obj(
         {
-            'name': 'admin',
+            'name': 'origin',
             'description': '',
             'image': 'mblocks/origin',
             'ingress': [
