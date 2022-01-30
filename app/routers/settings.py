@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 from app import deps, schemas
-from app.services import database
+from app.services import database, redis
 from app.utils import verify_password
 
 
@@ -17,13 +17,15 @@ async def aboutus(currentUser: schemas.CurrentUser = Depends(deps.get_current_us
     about_us = {
         'logo': 'https://gw.alipayobjects.com/zos/rmsportal/KDpgvguMpGfqaHPjicRK.svg',
         'title': 'Mblocks',
-        'description': 'Hello Mblocks',
+        'description': 'Hello Mblocks',   
     }
     if currentUser is None:
         return about_us
     find_user = database.crud.account.get(db, filter={'id': currentUser.id})
+    authorized = redis.get_authorized(user_id=currentUser.id)
     about_us['userinfo'] = {
         'display_name': find_user.display_name or find_user.user_name,
+        'apps':({ 'name': item } for item in authorized.keys())
     }
     return about_us
 

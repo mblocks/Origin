@@ -18,7 +18,7 @@ key_sessions = '{}:sessions'.format(perfix)
 key_users = '{}:users:{}'.format(perfix, '{}')
 key_users_sessions = '{}:users:{}:sessions'.format(perfix, '{}')
 key_users_authorized = '{}:users:{}:authorized'.format(perfix, '{}')
-key_roles = 'roles:{}'
+key_roles = '{}:roles'.format(perfix)
 
 
 def generate_apikey(current_user: schemas.CurrentUser) -> str:
@@ -45,50 +45,48 @@ def get_user(apikey):
     return json.loads(user) if user else None
 
 
-def set_authorized(user):
-    client.set(key_users_authorized.format(user.get('id')), json.dumps(
-        {item.get('id'): item for item in user.get('apps')}))
+def set_authorized(user_id, app_id, roles):
+    pipe = client.pipeline()
+    for role_id in roles:
+        pipe.zadd(key_users_authorized.format(user_id), {role_id:app_id})
+    pipe.execute()
+    pipe.reset()
 
 
 def del_authorized(user_id):
-    client.delete(key_users_authorized.format(user_id))
+    pass
 
 
 def get_authorized(user_id, lite=True):
-    authorized = client.get(key_users_authorized.format(user_id))
-    if authorized is None:
-        return {}
-    if lite == True:
-        return json.loads(authorized)
-
-    roles = []
-    for item_app in json.loads(authorized).values():
-        for item_role in item_app.get('roles'):
-            roles.append('roles:{}'.format(item_role.get('id')))
-
-    res = {}
-    for item in json.loads('[{}]'.format(','.join([i for i in client.mget(keys=roles) if i]))):
-        """
-        get redis and remove not exists role to json string
-        """
-        if not res.get(item['app_id']):
-            res[item['app_id']] = {'id': item['app_id'],
-                                   'name': item['app_name'], 'auth': {}}
-        for item_fun, item_limit in json.loads(item.get('auth')).items():
-            if not res[item['app_id']]['auth'].get(item_fun):
-                res[item['app_id']]['auth'][item_fun] = []
-            res[item['app_id']]['auth'][item_fun].append(item_limit)
-    return res
+    apps = {}
+    roles = client.zrange(key_users_authorized.format(user_id),0,-1)
+    for item in client.zrange(key_roles, 0, -1):
+        role = json.loads(item)
+        if str(role['role_id']) not in roles:
+            continue
+        item_app_name = role.get('app_name')
+        item_auth = role.get('auth')
+        if not apps.get(item_app_name):
+            apps[item_app_name] = {
+                'name': item_app_name,
+                'auth': {}
+            }
+        for item_fun, item_limit in item_auth.items():
+            if not apps[item_app_name]['auth'].get(item_fun):
+                apps[item_app_name]['auth'][item_fun] = []
+            apps[item_app_name]['auth'][item_fun].append(item_limit)
+    
+    return apps
 
 
 def set_role(app, role):
-    client.set(key_roles.format(role.id), json.dumps({
+    client.zadd(key_roles, {json.dumps({
         'app_id': app.id,
         'app_name': app.name,
         'role_id': role.id,
         'auth': role.auth
-    }))
+    }):role.id})
 
 
 def del_role(role_id):
-    client.delete(key_roles.format(role_id))
+    client.zremrangebyscore(key_roles,role_id,role_id)

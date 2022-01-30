@@ -3,14 +3,15 @@ from typing import Optional, List
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from app import schemas
-from app.services import database, get_user
+from app.services import database, redis
+from app.deps import get_current_user
 
 router = APIRouter()
 
 
 @router.get("/users", response_model=schemas.UserList)
 async def query_users(db: Session = Depends(database.client),
-                      currentUser: schemas.CurrentUser = Depends(get_user),
+                      currentUser: schemas.CurrentUser = Depends(get_current_user),
                       user_name: Optional[str] = None,
                       email: Optional[str] = None,
                       skip: int = 0,
@@ -25,7 +26,7 @@ async def query_users(db: Session = Depends(database.client),
 
 @router.post("/users", response_model=schemas.User)
 async def create_user(payload: schemas.UserCreate,
-                      currentUser: schemas.CurrentUser = Depends(get_user),
+                      currentUser: schemas.CurrentUser = Depends(get_current_user),
                       db: Session = Depends(database.client)
                       ):
     created_user = database.crud.user.create(db, payload=payload)
@@ -35,7 +36,7 @@ async def create_user(payload: schemas.UserCreate,
 @router.get("/users/{id}", response_model=schemas.User)
 async def get_user(id: int,
                    db: Session = Depends(database.client),
-                   currentUser: schemas.CurrentUser = Depends(get_user),
+                   currentUser: schemas.CurrentUser = Depends(get_current_user),
                    ):
     find_user = database.crud.user.get(db, filter={'id': id})
     return find_user
@@ -44,7 +45,7 @@ async def get_user(id: int,
 @router.post("/users/{id}/delete", response_model=schemas.User)
 async def delete_users(id: int,
                        db: Session = Depends(database.client),
-                       currentUser: schemas.CurrentUser = Depends(get_user),
+                       currentUser: schemas.CurrentUser = Depends(get_current_user),
                        ):
     deleted_user = database.crud.user.get(db, filter={'id': id})
     database.crud.user.delete(db, filter={'id': id})
@@ -78,7 +79,8 @@ async def set_user_app_authorized(user_id: int,
                                   db: Session = Depends(database.client),
                                   ):
     create_authorized = schemas.AuthorizedCreate(user_id=user_id, app_id=app_id, roles=payload)
-    database.crud.authorized.create(db, payload=create_authorized)
+    updated_authorized = database.crud.authorized.update(db, payload=create_authorized)
+    redis.set_authorized(**updated_authorized)
     return database.crud.user.authorized(db, user_id=user_id, app_id=app_id)
 
 

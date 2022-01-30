@@ -2,7 +2,7 @@
 from fastapi import APIRouter, Depends, Response, HTTPException
 from sqlalchemy.orm import Session
 from app import schemas
-from app.services import database
+from app.services import database, redis
 from app.utils import verify_password, generate_apikey
 router = APIRouter()
 
@@ -29,8 +29,18 @@ async def login(response: Response,
                 "type": "value_error"
             },
         ])
+    authorized = redis.get_authorized(user_id=find_user.id)
+    about_us = {
+        'logo': 'https://gw.alipayobjects.com/zos/rmsportal/KDpgvguMpGfqaHPjicRK.svg',
+        'title': 'Mblocks',
+        'description': 'Hello Mblocks',   
+    }
+    about_us['userinfo'] = {
+        'display_name': find_user.display_name or find_user.user_name,
+        'apps':({ 'name': item } for item in authorized.keys())
+    }
     response.set_cookie(key="apikey", value=generate_apikey(find_user))
-    return {'userinfo': find_user}
+    return about_us
 
 
 @router.post("/join", response_model=schemas.AboutUs)
