@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from typing import Optional
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app import schemas
 from app.services import docker, database
@@ -36,6 +36,15 @@ async def query_apps(db: Session = Depends(database.client),
 async def deploy_app(payload: schemas.AppCreate,
                      db: Session = Depends(database.client)
                      ):
+    find_exists_app = database.crud.app.get(db, filter={'name':payload.name, 'parent': 'None'})
+    if find_exists_app:
+        raise HTTPException(status_code=422, detail=[
+            {
+                "loc": ["body", "name"],
+                "msg": 'name {} has exists'.format(payload.name),
+                "type": "value_error"
+            },
+        ])
     created_app = database.crud.app.create(db, payload=payload)
     docker.deploy_app(created_app)
     return created_app

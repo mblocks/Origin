@@ -12,7 +12,7 @@ from app.utils import get_password_hash
 class App(Base):
     __tablename__ = "apps"
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
-    name = Column(String(100), unique=True, index=True)
+    name = Column(String(100), index=True)
     title = Column(String(100))
     description = Column(String(400))
     path = Column(String(100), unique=True)

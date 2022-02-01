@@ -18,6 +18,7 @@ app.include_router(routers.authorized, tags=["authorized"])
 app.include_router(routers.settings, tags=["settings"], dependencies=dependencies)
 app.include_router(routers.admin_apps, tags=["admin-apps"], prefix="/admin", dependencies=dependencies)
 app.include_router(routers.admin_users, tags=["admin-users"], prefix="/admin", dependencies=dependencies)
+app.include_router(routers.templates, tags=["templates"], prefix="/admin", dependencies=dependencies)
 
 @app.on_event("startup")
 async def startup_event():
