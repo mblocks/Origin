@@ -14,6 +14,7 @@ class CRUDAuthorized(CRUDBase[Authorized, AuthorizedCreate, AuthorizedUpdate]):
         for role_id in payload.roles:
             db.add(Authorized(user_id=payload.user_id, app_id=payload.app_id, role_id=role_id))
         db.commit()
+        return True
 
     def update(self, db: Session, payload: AuthorizedUpdate) -> None:
         query_authorized = super().query(

@@ -227,5 +227,5 @@ def test_authorized_set(db):
         'auth': {"query": {"hello": 1000}},
         'app_id': created_app.id
     })
-    created_authorized = crud.authorized.create(db, payload=schemas.AuthorizedCreate(app_id=created_app.id,user_id=1,roles=[created_role.id]))
-    assert len(created_authorized.get('roles')) == 1
+    created_authorized = crud.authorized.add(db, payload=schemas.AuthorizedCreate(app_id=created_app.id,user_id=1,roles=[created_role.id]))
+    assert created_authorized == True
