@@ -145,14 +145,8 @@ def update_app(app: App, parent: str):
     container_label = '{}.app={}'.format(namespace,get_container_label(app_name=app.name, parent=parent))
     container = get_container(label=container_label)
     if container:
-        if exists_host_ports:
-            container.remove(force=True)
-            create_container(App(**fix, depends=[]),
-                            network=namespace, parent=parent)
-        else:
-            create_container(App(**fix, depends=[]),
-                            network=namespace, parent=parent)
-            container.remove(force=True)
+        remove_container({'id':container.id})
+    create_container(App(**fix, depends=[]), network=namespace, parent=parent)
     backgrounds.init_kong()
 
 def get_image(name):
