@@ -3,6 +3,7 @@ from app.config import get_settings
 from app.services import database, redis
 from app.services.database.session import SessionLocal
 
+settings = get_settings()
 
 def init_kong() -> None:
     db = SessionLocal()
@@ -49,7 +50,8 @@ def init_kong() -> None:
         ]
     }
     print('=== kong config {} services==='.format(len(kong_services)))
-    requests.post(('http://gateway.origin.mblocks:8001/config'), json=config)
+    if settings.SERVICES_GATEWAY_CONFIG:
+        requests.post(settings.SERVICES_GATEWAY_CONFIG, json=config)
 
 
 def init_redis_data():

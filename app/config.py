@@ -25,10 +25,11 @@ class Settings(BaseSettings):
     REDIS_PORT: int = 6379
     REDIS_DB: int = 0
     REDIS_PASSWORD: str = None
+    SERVICES_GATEWAY_CONFIG: str = 'http://gateway.origin.mblocks:8001/config'
 
     CONTAINER_NAME_PREFIX: str = 'mblocks'
     CONTAINER_NETWORK: str = 'mblocks'
-    Environment: List[str] = ['FASTAPI_CONFIG','SQLALCHEMY_DATABASE_URI']
+    #Environment: List[str] = ['FASTAPI_CONFIG','SQLALCHEMY_DATABASE_URI']
 
     ROOT_NAME: str = 'admin'
     ROOT_PASSWORD: str = 'mblocks'
@@ -44,6 +45,7 @@ class Production(Settings):
 class Test(Settings):
     REDIS_HOST: str = '127.0.0.1'
     SQLALCHEMY_DATABASE_URI: str = 'sqlite:///test.db'
+    SERVICES_GATEWAY_CONFIG: str =  None
 
 
 @lru_cache()
