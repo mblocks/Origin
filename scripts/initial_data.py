@@ -1,3 +1,4 @@
+import os
 import logging
 import socket
 from app import schemas
@@ -9,6 +10,8 @@ from app.services.database import crud
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+hostname = socket.gethostname()
+origin_container = docker.get_container(name=hostname)
 settings = get_settings()
 
 def init() -> None:
@@ -21,11 +24,27 @@ def init() -> None:
         }))
         create_authorized = schemas.AuthorizedCreate(user_id=1, app_id=1, roles=[1])
         crud.authorized.add(db, payload=create_authorized)
-    if crud.app.count(db, filter={}) == 0:
         create_origin_app(db)
 
+def is_boot() -> bool:
+    return origin_container and settings.CONTAINER_NAME_PREFIX not in origin_container.name
+
+def get_origin_settings() -> dict:
+    origin_settings = {
+        'environment':[],
+        'volumes':[]
+        }
+    if is_boot():
+        for k,v in settings:
+            if os.getenv(k) == v and v != None:
+                origin_settings['environment'].append({'name':k, 'value':v})
+        for item_volume in origin_container.attrs['HostConfig']['Binds']:
+            item_host_path, item_mount_path = item_volume.split(':')
+            origin_settings['volumes'].append({'host_path':item_host_path, 'mount_path':item_mount_path})
+    return origin_settings
 
 def create_origin_app(db) -> None:
+    origin_settings = get_origin_settings()
     created_app = crud.app.create(db, payload=schemas.AppCreate.parse_obj(
         {
             'name': 'origin',
@@ -45,13 +64,8 @@ def create_origin_app(db) -> None:
                     'target': {'path': '/', 'port': 80},
                 },
             ],
-            'volumes': [
-                {
-                    'name': 'docker',
-                    'mount_path': '/var/run/docker.sock',
-                    'host_path': '/var/run/docker.sock',
-                },
-            ],
+            'volumes': origin_settings.get('volumes'),
+            'environment': origin_settings.get('environment'),
             'depends': [
                 {
                     'name': 'redis',
@@ -119,11 +133,8 @@ def create_origin_app(db) -> None:
         })
     )
     docker.deploy_app(created_app)
-
-def rename_container(name):
-    hostname = socket.gethostname()
-    docker.rename_container(hostname, name)
-
+    if is_boot():
+        docker.remove_container(filters={'name': hostname})
 
 def main() -> None:
     logger.info("Creating initial data")
