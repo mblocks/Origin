@@ -62,10 +62,15 @@ def generate_labels(ingress: List[Ingress], prefix: str):
         result['traefik.http.routers.{}.service'.format(name)] = name
         result['traefik.http.services.{}.loadbalancer.server.port'.format(
             name)] = '{}'.format(item.target.port)
-        result['traefik.http.middlewares.{}.stripprefix.prefixes'.format(
+        result['traefik.http.middlewares.{}-stripprefix.stripprefix.prefixes'.format(
             name)] = item.stripprefix if item.stripprefix else item.path
         result['traefik.http.routers.{}.middlewares'.format(
-            name)] = '{}@docker'.format(name)
+            name)] = '{}-stripprefix@docker'.format(name)
+        for item_middleware in item.middlewares:
+            if item_middleware.name == 'customrequestheaders':
+                for item_middleware_key,item_middleware_value in item_middleware.config.items():
+                    result['traefik.http.middlewares.{}-customrequestheaders.headers.customrequestheaders.{}'.format(name, item_middleware_key)] = item_middleware_value
+                    result['traefik.http.routers.{}.middlewares'.format(name)] = '{}-stripprefix@docker,{}-customrequestheaders@docker'.format(name, name)
     return result
 
 
