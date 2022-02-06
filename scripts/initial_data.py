@@ -54,8 +54,10 @@ def create_origin_app(db) -> None:
                 {
                     'name': 'welcome',
                     'path': '/api/welcome',
-                    'stripprefix': '/api',
                     'target': {'path': '/welcome', 'port': 80},
+                    'middlewares':[
+                        {'name':'stripprefix', 'config':{'stripprefix':'/api'}},
+                    ]
                 },
                 {
                     'name': 'default',

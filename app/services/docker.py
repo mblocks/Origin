@@ -2,7 +2,7 @@ import docker
 import uuid
 from typing import Dict, List
 from docker.types import Mount
-from app.schemas.app import Environment, Port, Volume, Ingress, App
+from app.schemas.app import Environment, Port, Volume, Ingress, App, Middleware
 from app import backgrounds
 
 #client = docker.DockerClient(base_url='unix://var/run/docker.sock')
@@ -53,6 +53,7 @@ def generate_labels(ingress: List[Ingress], prefix: str):
         result['traefik.enable'] = "true"
         rule = []
         name = '{}-{}'.format(prefix, item.name)
+        middlewares = [Middleware(name='stripprefix', config={'stripprefix':item.path})] + item.middlewares
         if item.domain:
             rule.append('Host(`{}`)'.format(item.domain))
         if item.path:
@@ -62,11 +63,10 @@ def generate_labels(ingress: List[Ingress], prefix: str):
         result['traefik.http.routers.{}.service'.format(name)] = name
         result['traefik.http.services.{}.loadbalancer.server.port'.format(
             name)] = '{}'.format(item.target.port)
-        result['traefik.http.middlewares.{}-stripprefix.stripprefix.prefixes'.format(
-            name)] = item.stripprefix if item.stripprefix else item.path
-        result['traefik.http.routers.{}.middlewares'.format(
-            name)] = '{}-stripprefix@docker'.format(name)
-        for item_middleware in item.middlewares:
+        for item_middleware in middlewares:
+            if item_middleware.name == 'stripprefix':
+                result['traefik.http.middlewares.{}-stripprefix.stripprefix.prefixes'.format(name)] = item_middleware.config.get('stripprefix')
+                result['traefik.http.routers.{}.middlewares'.format(name)] = '{}-stripprefix@docker'.format(name)
             if item_middleware.name == 'customrequestheaders':
                 for item_middleware_key,item_middleware_value in item_middleware.config.items():
                     result['traefik.http.middlewares.{}-customrequestheaders.headers.customrequestheaders.{}'.format(name, item_middleware_key)] = item_middleware_value
