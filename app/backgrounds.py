@@ -1,6 +1,6 @@
 import requests
 from app.config import get_settings
-from app.services import database, redis
+from app.services import database
 from app.services.database.session import SessionLocal
 
 settings = get_settings()
@@ -52,19 +52,3 @@ def init_kong() -> None:
     print('=== kong config {} services==='.format(len(kong_services)))
     if settings.SERVICES_GATEWAY_CONFIG:
         requests.post(settings.SERVICES_GATEWAY_CONFIG, json=config)
-
-
-def init_redis_data():
-    db = SessionLocal()
-    query_roles = database.crud.role.query(db, filter={}, skip=0, limit=1000)
-    query_apps = database.crud.app.query(db, select=['id','name'],filter={'parent': 'None'}, skip=0, limit=1000)
-    apps = {}
-    for item in query_apps:
-        apps[item.id] = item
-    for item in query_roles:
-        redis.set_role(app=apps[item.app_id], role=item)
-    print('=== redis data init ===')
-    query_authorized = database.crud.authorized.query(db, filter={}, skip=0, limit=100000)
-    for item in query_authorized:
-        redis.set_authorized(user_id=item.user_id,app_id=item.app_id,roles=[item.role_id])
-    print('=== redis data authorized init ===')
