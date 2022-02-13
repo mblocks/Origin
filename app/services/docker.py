@@ -1,12 +1,16 @@
 import docker
 import uuid
+from pathlib import Path
 from typing import Dict, List
 from docker.types import Mount
 from app.schemas.app import Environment, Port, Volume, Ingress, App, Middleware
 from app import backgrounds
+from app.config import get_settings
 
 #client = docker.DockerClient(base_url='unix://var/run/docker.sock')
 client = docker.from_env()
+app_settings = get_settings()
+volumes_root = app_settings.VOLUMES_ROOT
 namespace = 'mblocks'
 
 try:
@@ -18,6 +22,8 @@ except docker.errors.NotFound:
 def generate_volumes(volumes: List[Volume]):
     result = []
     for volume in volumes:
+        if volume.host_path!='/var/run/docker.sock':
+            Path('/data/{}'.format(volume.host_path.replace(volumes_root, ''))).mkdir(parents=True, exist_ok=True)
         result.append(Mount(target=volume.mount_path,
                       source=volume.host_path, type="bind"))
     return result

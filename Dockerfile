@@ -4,4 +4,4 @@ RUN apk update && \
 ADD requirements.txt /app
 RUN pip install -r requirements.txt --no-cache-dir
 COPY . /app
-VOLUME ["/mblocks"]
+VOLUME ["/data"]

@@ -13,6 +13,7 @@ logger = logging.getLogger(__name__)
 hostname = socket.gethostname()
 origin_container = docker.get_container(name=hostname)
 settings = get_settings()
+volumes_root = settings.VOLUMES_ROOT
 
 def init() -> None:
     db = SessionLocal()
@@ -41,6 +42,8 @@ def get_origin_settings() -> dict:
         for item_volume in origin_container.attrs['HostConfig']['Binds']:
             item_host_path, item_mount_path = item_volume.split(':')
             origin_settings['volumes'].append({'host_path':item_host_path, 'mount_path':item_mount_path})
+        if volumes_root:
+            origin_settings['volumes'].append({'host_path':volumes_root, 'mount_path':'/data'})
     return origin_settings
 
 def create_origin_app(db) -> None:
@@ -73,6 +76,7 @@ def create_origin_app(db) -> None:
                     'name': 'redis',
                     'title': 'redis',
                     'image': 'redis:alpine',
+                    #'volumes': [{'host_path':'{}/origin/redis/data'.format(volumes_root), 'mount_path':'/data'}] if (volumes_root and len(origin_settings.get('volumes'))==0) else [],
                 },
                 {
                     'name': 'gateway',

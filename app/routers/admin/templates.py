@@ -2,6 +2,10 @@
 from typing import List
 from fastapi import APIRouter
 from app import schemas
+from app.config import get_settings
+
+settings = get_settings()
+volumes_root = settings.VOLUMES_ROOT
 router = APIRouter()
 
 
@@ -33,6 +37,7 @@ async def query_templates():
                         {'name':'MINIO_NOTIFY_WEBHOOK_ENABLE_DRIVE', 'value':'on'},
                         {'name':'MINIO_NOTIFY_WEBHOOK_ENDPOINT_DRIVE', 'value':'http://drive.mblocks/webhooks/minio'}
                     ],
+                    'volumes': [{'host_path':'{}/drive/minio/data'.format(volumes_root), 'mount_path':'/data'}] if volumes_root else [],
                     'ingress': [
                         {
                             'name':'minio', 
