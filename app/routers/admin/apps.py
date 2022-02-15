@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from typing import Optional
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 from sqlalchemy.orm import Session
 from app import schemas
 from app.services import docker, database
@@ -34,6 +34,7 @@ async def query_apps(db: Session = Depends(database.client),
 
 @router.post("/apps", response_model=schemas.App)
 async def deploy_app(payload: schemas.AppCreate,
+                     background_tasks: BackgroundTasks,
                      db: Session = Depends(database.client)
                      ):
     find_exists_app = database.crud.app.get(db, filter={'name':payload.name, 'parent': 'None'})
@@ -46,13 +47,14 @@ async def deploy_app(payload: schemas.AppCreate,
             },
         ])
     created_app = database.crud.app.create(db, payload=payload)
-    docker.deploy_app(created_app)
+    background_tasks.add_task(docker.deploy_app, created_app)
     return created_app
 
 
 @router.post("/apps/{id}", response_model=schemas.App)
 async def update_app(id: int,
                      payload: schemas.AppUpdate,
+                     background_tasks: BackgroundTasks,
                      db: Session = Depends(database.client)):
     app = database.crud.app.get(
         db, select=['version', 'parent'], filter={'id': id})
@@ -64,7 +66,7 @@ async def update_app(id: int,
             db, select=['name'], filter={'id': app.parent})
     else:
         parent = None
-    docker.update_app(app=updated_app, parent=parent.name if parent else None)
+    background_tasks.add_task(docker.update_app, app=updated_app, parent=parent.name if parent else None)
     return updated_app
 
 
@@ -87,11 +89,12 @@ async def delete_app(id: int, db: Session = Depends(database.client)):
 @router.post("/apps/{id}/depends", response_model=schemas.App)
 async def deploy_app_depends(payload: schemas.AppCreate,
                              id: int,
+                             background_tasks: BackgroundTasks,
                              db: Session = Depends(database.client)):
     app = database.crud.app.get(db, filter={'id': id})
     payload.parent = app.id
     created_depend = database.crud.app.create(db, payload=payload)
-    docker.update_app(created_depend, app.name)
+    background_tasks.add_task(docker.update_app, created_depend, app.name)
     return created_depend
 
 
@@ -99,13 +102,14 @@ async def deploy_app_depends(payload: schemas.AppCreate,
 async def update_app_depends(payload: schemas.AppUpdate,
                              id: int,
                              depend_id: int,
+                             background_tasks: BackgroundTasks,
                              db: Session = Depends(database.client),
                             ):
     app = database.crud.app.get(db, filter={'id': id})
     depend = database.crud.app.get(db, filter={'id': depend_id})
     payload.version = depend.version + 1
     updated_depend = database.crud.app.update(db, filter={'id': depend_id}, payload=payload)
-    docker.update_app(updated_depend, app.name)
+    background_tasks.add_task(docker.update_app, updated_depend, app.name)
     return updated_depend
 
 
