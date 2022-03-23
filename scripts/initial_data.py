@@ -36,6 +36,7 @@ def get_origin_settings() -> dict:
         'volumes':[]
         }
     if is_boot():
+        origin_settings['environment'].append({'name':'FASTAPI_CONFIG', 'value':'production'})
         for k,v in settings:
             if os.getenv(k) == v and v != None:
                 origin_settings['environment'].append({'name':k, 'value':v})

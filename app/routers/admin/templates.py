@@ -12,7 +12,14 @@ router = APIRouter()
 @router.get("/templates", response_model=List[schemas.App])
 async def query_templates():
     return [
-        {'name': 'hellonginx9', 'title': 'nginx', 'description': 'hello nginx', 'image': 'nginx:alpine'},
+        {'name': 'bookkeeping',
+         'title': 'bookkeeping', 
+         'description': 'lite bookkeeping', 
+         'image': 'mblocks/bookkeeping',
+         'ingress': [
+            {'name':'bookkeeping', 'path': '/bookkeeping', 'target': {'path': '/', 'port': 80}, 'use_auth':{}}
+          ],
+        },
         {'name': 'drive', 'title': 'Drive', 'description': 'hello drive', 'image': 'mblocks/drive-backend',
             'environment':[
                 {'name':'SERVICES_MINIO_HOST','value':'minio.drive.mblocks:9000'},
