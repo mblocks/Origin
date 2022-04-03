@@ -29,7 +29,11 @@ class CRUDApp(CRUDBase[App, AppCreate, AppUpdate]):
             role.app_id = created_app.id
             db.add(Role(**role.dict()))
         db.commit()
-        redis.set_app(created_app)
+        """
+        ignore redis sync, avoid boot container can not find redis server and fail.
+        app's visibility_level default value is private， so we don't need to sync redis.
+        """
+        #redis.set_app(created_app)
         return created_app
 
     def update(self, db: Session, **kwargs) -> Optional[Role]:
