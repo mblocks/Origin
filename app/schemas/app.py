@@ -1,5 +1,6 @@
 from typing import Dict, Optional, List
 from pydantic import BaseModel, Field
+from enum import Enum
 from .role import RoleCreate
 
 class NameValue(BaseModel):
@@ -63,9 +64,15 @@ class Container(BaseModel):
     ip: Optional[str] = None
 
 
+class VisibilityLevel(str, Enum):
+    private = 'private'
+    internal = 'internal'
+
+
 class AppBase(BaseModel):
     id: Optional[int] = None
     name: Optional[str] = None
+    visibility_level: Optional[VisibilityLevel] = 'private'
     title: Optional[str] = None
     description: Optional[str] = None
     path: Optional[str] = None

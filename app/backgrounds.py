@@ -1,24 +1,25 @@
 import requests
 from app.config import get_settings
-from app.services import database
+from app.services import database, redis
 from app.services.database.session import SessionLocal
 
 settings = get_settings()
 
 def init_kong() -> None:
     db = SessionLocal()
-    kong_services = []
+    kong_services = {}
     apps = database.crud.app.query(db, filter={'parent': 'None'}, skip=0, limit=1000)
     for item in apps:
-        for item_router_index, item_router in  enumerate(item.ingress):
+        for item_router in item.ingress:
             if item_router.get('use_auth') != None:
-                kong_services.append({'name':'{}-{}'.format(item.name, item_router_index),
-                                    'url':'http://{}.mblocks:{}{}'.format(item.name,item_router['target']['port'],item_router['target']['path']),
-                                    'routes':[
-                                            {'paths':[item_router['path']]}
-                                        ]
-                                    })
-            
+                kong_services[item.name] = {
+                                            'name':item.name,
+                                            'visibility_level': item.visibility_level,
+                                            'url':'http://{}.mblocks:{}{}'.format(item.name,item_router['target']['port'],item_router['target']['path']),
+                                            'routes':[ {'paths':[item_router['path']]} ]
+                                            }
+
+        continue # ignore app depends ingress
         for item_depend in item.depends:
             for item_depend_router_index, item_depend_router in  enumerate(item_depend.ingress):
                 if item_depend_router.get('use_auth') != None:
@@ -33,10 +34,13 @@ def init_kong() -> None:
         print('=== kong config 0 services===')
         return
     
+    for k, v in kong_services.items():
+        redis.client.sadd('redis-auth:services:{}'.format(k),v.get('visibility_level'))
+
     config = {
         "_format_version": "2.1",
         "_transform": True,
-        "services": kong_services,
+        "services": list(kong_services.values()),
         "plugins": [
             {
                 "name": "redis-auth",

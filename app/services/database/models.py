@@ -13,6 +13,7 @@ class App(Base):
     __tablename__ = "apps"
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     name = Column(String(100), index=True)
+    visibility_level = Column(String(40), default='private')
     title = Column(String(100))
     description = Column(String(400))
     path = Column(String(100), unique=True)
