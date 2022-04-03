@@ -6,6 +6,9 @@
 
 pipenv shell
 pipenv install
+python scripts/initial_database.py
+python scripts/initial_data.py
+python scripts/initial_redis.py
 uvicorn app.main:app --reload
 
 ```
