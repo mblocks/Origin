@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from typing import List, Optional
 from app.schemas import AppCreate, AppUpdate
+from app.services import redis
 from sqlalchemy.orm import Session
 from ..models import App, Role
 from .base import CRUDBase
@@ -28,7 +29,13 @@ class CRUDApp(CRUDBase[App, AppCreate, AppUpdate]):
             role.app_id = created_app.id
             db.add(Role(**role.dict()))
         db.commit()
+        redis.set_app(created_app)
         return created_app
+
+    def update(self, db: Session, **kwargs) -> Optional[Role]:
+        updated_app = super().update(db, **kwargs)
+        redis.set_app(updated_app)
+        return updated_app
 
     def query(
         self,
