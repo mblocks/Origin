@@ -107,6 +107,7 @@ class AppUpdate(BaseModel):
     """
     remove `name` from the update schema to protect the app name
     """
+    visibility_level: Optional[VisibilityLevel] = None
     title: Optional[str] = None
     description: Optional[str] = None
     path: Optional[str] = None

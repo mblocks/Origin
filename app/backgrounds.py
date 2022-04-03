@@ -13,7 +13,7 @@ def init_kong() -> None:
         for item_router in item.ingress:
             if item_router.get('use_auth') != None:
                 kong_services[item.name] = {
-                                            'name':item.name,
+                                            'name':'app{}'.format(item.id),
                                             'visibility_level': item.visibility_level,
                                             'url':'http://{}.mblocks:{}{}'.format(item.name,item_router['target']['port'],item_router['target']['path']),
                                             'routes':[ {'paths':[item_router['path']]} ]

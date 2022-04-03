@@ -15,6 +15,7 @@ client = redis.Redis(connection_pool=redis_pool)
 
 perfix = 'redis-auth'
 key_sessions = '{}:sessions'.format(perfix)
+key_services = '{}:services:app{}'.format(perfix, '{}')
 key_users = '{}:users:{}'.format(perfix, '{}')
 key_users_sessions = '{}:users:{}:sessions'.format(perfix, '{}')
 key_users_authorized = '{}:users:{}:authorized'.format(perfix, '{}')
@@ -47,6 +48,11 @@ def get_user(apikey):
 
 def set_authorized(user_id, app_id, roles):
     pipe = client.pipeline()
+    if len(roles) == 0:
+        pipe.srem(key_services.format(app_id), user_id)
+    else:
+        pipe.sadd(key_services.format(app_id), user_id)
+    pipe.zrem(key_users_authorized.format(user_id), app_id)
     for role_id in roles:
         pipe.zadd(key_users_authorized.format(user_id), {role_id:app_id})
     pipe.execute()
@@ -90,3 +96,7 @@ def set_role(app, role):
 
 def del_role(role_id):
     client.zremrangebyscore(key_roles,role_id,role_id)
+
+
+def set_app(app):
+    client.sadd(key_services.format(app.id), app.visibility_level)
