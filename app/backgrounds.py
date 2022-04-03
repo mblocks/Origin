@@ -36,6 +36,7 @@ def init_kong() -> None:
     
     for k, v in kong_services.items():
         redis.client.sadd('redis-auth:services:{}'.format(k),v.get('visibility_level'))
+        del v['visibility_level']
 
     config = {
         "_format_version": "2.1",
