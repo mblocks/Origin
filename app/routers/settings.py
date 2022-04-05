@@ -27,10 +27,8 @@ async def aboutus(currentUser: schemas.CurrentUser = Depends(deps.get_current_us
         'display_name': find_user.display_name or find_user.user_name,
         'apps':list({ 'name': item } for item in authorized.keys())
     }
-    return about_us
-    # response authorized apps only
-    # find unauthorized apps for frontend load their's file
-    for item in database.crud.app.query(db, select=['id','name','title','description'], filter={'parent': 'None','name not in':authorized.keys()}, skip=0, limit=1000):
+    # find internal apps for frontend load their's file
+    for item in database.crud.app.query(db, select=['id','name','title','description'], filter={'parent': 'None', 'visibility_level':'internal','name not in':authorized.keys()}, skip=0, limit=1000):
         about_us['userinfo']['apps'].append(item)
     return about_us
 
