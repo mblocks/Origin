@@ -64,6 +64,12 @@ def create_origin_app(db) -> None:
                     ]
                 },
                 {
+                    'name': 'origin',
+                    'path': '/admin',
+                    'target': {'path': '/admin', 'port': 80},
+                    'use_auth': {},
+                },
+                {
                     'name': 'default',
                     'path': '/',
                     'use_auth': {},

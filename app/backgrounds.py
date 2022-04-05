@@ -12,9 +12,14 @@ def init_kong() -> None:
     for item in apps:
         for item_router in item.ingress:
             if item_router.get('use_auth') != None:
-                kong_services['app{}'.format(item.id)] = {
-                                            'name':'app{}'.format(item.id),
-                                            'visibility_level': item.visibility_level,
+                """
+                set service name as app{id} if ingress's router named app's name
+                check service has authorized when request this service
+                """
+                item_service_name = 'app{}{}'.format(item.id, '' if item_router.get('name') == item.name else item_router.get('name'))
+                kong_services[item_service_name] = {
+                                            'name':item_service_name,
+                                            'app': item,
                                             'url':'http://{}.mblocks:{}{}'.format(item.name,item_router['target']['port'],item_router['target']['path']),
                                             'routes':[ {'paths':[item_router['path']]} ]
                                             }
@@ -34,9 +39,9 @@ def init_kong() -> None:
         print('=== kong config 0 services===')
         return
     
-    for k, v in kong_services.items():
-        redis.client.sadd('redis-auth:services:{}'.format(k),v.get('visibility_level'))
-        del v['visibility_level']
+    for v in kong_services.values():
+        redis.set_app(v.get('app'))
+        del v['app']
 
     config = {
         "_format_version": "2.1",
